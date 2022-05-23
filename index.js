@@ -20,11 +20,16 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const partsCollection = client.db("doctors_portal").collection("parts");
+    const partsCollection = client.db("ferrarilux").collection("parts");
 
 
     // TODO:get all part 
-
+      app.get("/part", async (req, res) => {
+      const query = {};
+      const cursor = partsCollection.find(query);
+      const parts = await cursor.toArray();
+      res.send(parts);
+      });
 
 
   } finally {
