@@ -42,8 +42,15 @@ async function run() {
     const partsCollection = client.db("ferrarilux").collection("parts");
     const bookingCollection = client.db("ferrarilux").collection("orders");
     const userCollection = client.db("ferrarilux").collection("users" );
+    const reviewCollection = client.db("ferrarilux").collection("reviews" );
 
-
+  // todo:orders part
+  app.post('/review', async (req,res)=>{
+    const review =req.body;
+    console.log(order);
+    const result = await reviewCollection.insertOne(review);
+    res.send(result)
+  })
 
     // TODO:get all users
     app.get('/user',verifyJWT, async (req,res)=>{
@@ -55,7 +62,7 @@ async function run() {
     // TODO: secure admin role
     app.get('/admin/:email', async(req, res) =>{
       const email = req.params.email;
-      console.log(email);
+      // console.log(email);
       const user = await userCollection.findOne({email: email});
       const isAdmin = user.role === 'admin';
       res.send({admin: isAdmin})
