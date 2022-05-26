@@ -85,7 +85,6 @@ async function run() {
     // TODO:create user
     app.put('/user/:email', async (req, res) => {
       const email = req.params.email;
-      console.log(email);
       const user = req.body;
       // console.log(user);
       const filter = { email: email };
@@ -136,7 +135,6 @@ async function run() {
       // TODO:get my orders
       app.get('/orders',verifyJWT, async(req,res)=>{
         const userEmail = req.query.userEmail;
-        console.log(userEmail);
         const decodedEmail=req.decoded.email;
         if( userEmail===decodedEmail){
           const query = {userEmail:userEmail}
