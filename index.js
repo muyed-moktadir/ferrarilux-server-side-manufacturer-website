@@ -18,6 +18,24 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+
+/* TODO:verify jwt token */ 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: 'UnAuthorized access' });
+  }
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: 'Forbidden access' })
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
+
 async function run() {
   try {
     await client.connect();
@@ -26,20 +44,31 @@ async function run() {
     const userCollection = client.db("ferrarilux").collection("users" );
 
 
+
+    // TODO:get all users
+    app.get('/user', async (req,res)=>{
+      const users = await userCollection.find().toArray();
+      res.send(users);
+    })
+
+
+    // TODO:create user
     app.put('/user/:email', async (req, res) => {
       const email = req.params.email;
       console.log(email);
       const user = req.body;
-      console.log(user);
+      // console.log(user);
       const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      //  const token = jwt.sign({email:email},process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-      res.send(result);
+       const token = jwt.sign({email:email},process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+      res.send({result,token});
     })
+
+
 
 
     // TODO:get all part 
@@ -50,6 +79,8 @@ async function run() {
       res.send(parts);
       });
 
+
+
       // TODO:get single part by id 
       app.get("/part/:id", async (req, res) => {
         const id = req.params.id;
@@ -59,42 +90,36 @@ async function run() {
         res.send(part);
       });
 
-      app.post('/booking', async (req,res)=>{
-
-        /*post er data thake body er moddhe. booking er data ta er req ashtese client theke */
-        const booking = req.body; 
-        const query = {treatment: booking.treatment,date:booking.date,patient:booking.patient};
-  
-        /*then data base  a query diye find korbe (74.3)*/ 
-        const exists = await bookingCollection.findOne(query);
-        if(exists){
-          return res.send({success:false,booking:exists})
-        }
-  
-        const result = await bookingCollection.insertOne(booking);
-        return res.send({success:true, result});
-      })
+    
 
 
       // todo:orders part
       app.post('/orders', async (req,res)=>{
         const order =req.body;
+        console.log(order);
         const result = await bookingCollection.insertOne(order);
         res.send(result)
       })
 
 
 
-
       // TODO:get my orders
-      app.get('/orders',async(req,res)=>{
+      app.get('/orders',verifyJWT, async(req,res)=>{
         const userEmail = req.query.userEmail;
         console.log(userEmail);
-        const query = {userEmail:userEmail}
-        const bookings = await bookingCollection.find(query).toArray();
-        res.send(bookings)
+        const decodedEmail=req.decoded.email;
+        if( userEmail===decodedEmail){
+          const query = {userEmail:userEmail}
+          const bookings = await bookingCollection.find(query).toArray();
+          res.send(bookings)
+        }
+        else{
+          return res.status(403).send({message:'forbidden access'})
+        } 
   
       })
+
+
 
   } finally {
     // await client.close();
