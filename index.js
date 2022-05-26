@@ -44,7 +44,7 @@ async function run() {
     const userCollection = client.db("ferrarilux").collection("users" );
     const reviewCollection = client.db("ferrarilux").collection("reviews" );
 
-  // todo:orders part
+  // todo:review
   app.post('/review', async (req,res)=>{
     const review =req.body;
     console.log(order);
